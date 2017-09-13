@@ -9,6 +9,7 @@
 import UIKit
 
 class ViewController: UIViewController {
+    @IBOutlet weak var myTableView: UITableView!
     // variable Declaration
     var latitudeArrayStart = [Any]()
     var longitudeArrayStart = [Any]()
@@ -17,6 +18,20 @@ class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        getDataFromApi()
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(5), execute: {
+            //Register nib
+            let cellNib = UINib(nibName: "CustomcellTableViewCell", bundle: nil)
+            self.myTableView.register(cellNib, forCellReuseIdentifier: "CustomcellTableViewCell")
+            self.myTableView.dataSource = self
+            self.myTableView.delegate = self
+        })
+        
+        
+    
+    
+}
+    func getDataFromApi() {
         let headers = [
             "content-type": "application/x-www-form-urlencoded",
             "cache-control": "no-cache",
@@ -50,10 +65,10 @@ class ViewController: UIViewController {
                     return
                 }
                 // Routes Of Map
-             guard let routesData = dict["routes"] as? [[String : AnyObject]]else {return}
+                guard let routesData = dict["routes"] as? [[String : AnyObject]]else {return}
                 
                 guard let legsData = routesData[0]["legs"] as? [[String : AnyObject]] else {return}
-
+                
                 guard let startLocation = legsData[0] ["start_location"] as? [String : AnyObject] else {return}
                 guard let latitudeOfStartLegs = startLocation["lat"] else {return}
                 guard let longitudeOfStartLegs = startLocation["lng"] else {return}
@@ -63,7 +78,7 @@ class ViewController: UIViewController {
                 guard let latitudeOfEndLegs = endLocation["lat"] else {return}
                 guard let longitudeOfEndLegs = endLocation["lng"] else {return}
                 
-                self.latitudeArrayStart.append(longitudeOfStartLegs)
+                self.latitudeArrayStart.append(latitudeOfStartLegs)
                 self.longitudeArrayStart.append(longitudeOfStartLegs)
                 self.latitudeArrayEnd.append(latitudeOfEndLegs)
                 self.longitudeArrayEnd.append(longitudeOfEndLegs)
@@ -90,7 +105,7 @@ class ViewController: UIViewController {
                     self.longitudeArrayEnd.append(longitudeOfend)
                 }
                 
-                
+               
                 print("My latitude Array data of STEPS is \(self.latitudeArrayStart.count)")
                 
                 print("My Longitude Array data of STEPS is \(self.longitudeArrayStart.count)")
@@ -113,6 +128,28 @@ class ViewController: UIViewController {
         
         
     }
+}
+// Tableview datasource and delegate
+extension ViewController: UITableViewDelegate, UITableViewDataSource{
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return latitudeArrayStart.count
+        
+    }
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 150
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "CustomcellTableViewCell", for: indexPath) as? CustomcellTableViewCell else{
+         fatalError("not found")
+        }
+        cell.startlattitudeLabel.text = String(describing: latitudeArrayStart[indexPath.row])
+        cell.startlongitudeLable.text = String(describing: longitudeArrayStart[indexPath.row])
+        cell.endLattitudeLabel.text = String(describing: latitudeArrayEnd[indexPath.row])
+        cell.endLongitudeLabel.text = String(describing: longitudeArrayEnd[indexPath.row])
+        return cell
+    }
+    
     
 }
 
